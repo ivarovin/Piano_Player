@@ -1,0 +1,101 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class PianoPlayer : MonoBehaviour
+{
+    public static PianoPlayer instance;
+
+    public MusicSheet[] musicSheet;
+    public int[] repetitionsPerSheet;
+
+    public List<PianoKey> pianoKeys;
+    public List<FingerMovement> fingers;
+
+    public bool isLoop;
+
+    private string musicSheetKeys;
+    private float[] timeBtNotes;
+
+    private void Awake()
+    {
+        instance = instance == null ? this : instance;
+        SearchPianoKeys();
+    }
+
+    private void SearchPianoKeys()
+    {
+        PianoKey[] keys = FindObjectsOfType<PianoKey>();
+        pianoKeys = new List<PianoKey>(keys);
+    }
+
+    private void Start() => StartCoroutine(PlayPartiture());
+
+    IEnumerator PlayPartiture()
+    {
+        do
+        {
+            for (int repetitions = 0, currSheet = 0; currSheet < musicSheet.Length; currSheet++)
+            {                
+                SetSheetValues(musicSheet[currSheet]);
+                string[] notesFromPartiture = musicSheetKeys.Split(',');
+                List<string> notesToPush = new List<string>(notesFromPartiture);
+
+                do
+                {
+                    for (int currNote = 0; currNote < notesToPush.Count; currNote++)
+                    {
+                        PianoKey currKey = FindPianoKey(notesToPush[currNote]);
+                        FingerMovement nearestFinger = GetNearestFinger(currKey.pushPos.position);
+
+                        nearestFinger.MoveTo(currKey);
+
+                        yield return new WaitForSeconds(timeBtNotes[currNote]);
+                    }
+                    repetitions++;
+
+                } while (repetitions < repetitionsPerSheet[currSheet]);
+
+                yield return null;
+            }
+        } while (isLoop);
+    }
+
+    private void SetSheetValues(MusicSheet _sheet)
+    {
+        musicSheetKeys = _sheet.notes;
+        timeBtNotes = _sheet.tempos;
+    }
+
+    private PianoKey FindPianoKey(string _noteName)
+    {
+        foreach (PianoKey currKey in pianoKeys)
+        {
+            if (currKey.noteName.Equals(_noteName))
+            {
+                return currKey;
+            }
+        }
+        return pianoKeys[0];
+    }
+
+    private FingerMovement GetNearestFinger(Vector3 _destination)
+    {
+        Vector3 nearestPos = Vector3.positiveInfinity;
+        FingerMovement nearestFinger = fingers[0];
+
+        foreach (FingerMovement finger in fingers)
+        {
+            if (!finger.isMoving)
+            {
+                if (Mathf.Abs(_destination.z - finger.transform.position.z) <
+                    Mathf.Abs(_destination.z - nearestPos.z))
+                {
+                    nearestPos = finger.transform.position;
+                    nearestFinger = finger;
+                }
+            }
+        }
+        return nearestFinger;
+    }
+}
