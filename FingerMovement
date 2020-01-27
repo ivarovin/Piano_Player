@@ -1,0 +1,55 @@
+using System.Collections;
+using UnityEngine;
+
+public class FingerMovement : MonoBehaviour
+{
+    public float moveDuration;
+    public float stepHeight;
+    public bool isMoving { get; set; }
+
+    private PianoKey actualKey;
+
+    public void MoveTo (PianoKey _posToMove)
+    {
+        try
+        {
+            actualKey.anim.SetBool("Pushed", false);
+        }
+        catch {}
+       
+        StartCoroutine(StepTransition(_posToMove));
+    }
+
+    IEnumerator StepTransition(PianoKey _destinationPos)
+    {
+        isMoving = true;
+
+        Vector3 startPos = transform.position;        
+        Vector3 endPos = _destinationPos.pushPos.position;
+        
+        Vector3 center = (endPos + startPos) / 2;
+        center += Vector3.up * (Vector3.Distance(startPos, endPos) + 0.5f) * stepHeight;
+
+        float elapsed = 0.0f;
+        while (elapsed < moveDuration)
+        {
+            float normalizedTime = elapsed / moveDuration;
+
+            transform.position = Vector3.Lerp(
+                Vector3.Lerp(startPos, center, normalizedTime),
+                Vector3.Lerp(center, endPos, normalizedTime),
+                normalizedTime);
+            
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        transform.position = endPos;
+
+        actualKey = _destinationPos;
+        actualKey.anim.SetBool("Pushed", true);
+
+        AudioManager.instance.PlaySound(actualKey.noteSound);               
+        isMoving = false;
+    }
+}
