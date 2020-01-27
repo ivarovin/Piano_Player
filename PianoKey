@@ -1,0 +1,10 @@
+using UnityEngine;
+
+public class PianoKey : MonoBehaviour
+{
+    public Animator anim;
+    public Transform pushPos;
+    public AudioClip noteSound;
+
+    public string noteName;
+}
