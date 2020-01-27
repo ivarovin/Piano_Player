@@ -1,0 +1,11 @@
+using UnityEngine;
+
+public class AudioManager : MonoBehaviour
+{
+    public static AudioManager instance;
+
+    public AudioSource audioPlayer;
+
+    private void Awake() => instance = instance == null ? this : instance;
+    public void PlaySound(AudioClip _clip) => audioPlayer.PlayOneShot(_clip);
+}
