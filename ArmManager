@@ -1,0 +1,43 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+public class ArmManager : MonoBehaviour
+{
+    public Transform hand;
+    public Transform armPivot;
+    public float moveSpeed;
+
+    public List<FingerMovement> handFingers;
+
+    private Vector3 handOffset;
+    private Vector3 armOffset;
+
+    private void Start()
+    {
+        armOffset = hand.position - armPivot.position;
+        handOffset = GetFingersCenter() - hand.position;
+    }
+
+    private Vector3 GetFingersCenter()
+    {
+        Vector3 total = Vector3.zero;
+
+        foreach (FingerMovement finger in handFingers)
+        {
+            total += finger.transform.position;
+        }
+
+        return total / handFingers.Count;
+    }
+
+    private void Update()
+    {
+        armPivot.position = Vector3.Lerp(armPivot.position,
+            hand.position - armOffset,
+            moveSpeed * Time.deltaTime);
+
+        hand.position = Vector3.Lerp(hand.position,
+            GetFingersCenter() - handOffset,
+            moveSpeed * Time.deltaTime);
+    }
+}
